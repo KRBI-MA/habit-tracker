@@ -381,6 +381,39 @@ dialog label small { font-weight: 400; text-transform: none; }
 .stats-summary .tile strong { display: block; font-size: 1.3rem; }
 .stats-summary .tile span { font-size: 0.75rem; color: var(--text-dim); }
 
+/* Kurzbefehle-Hilfe */
+.hint-btn {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hint-text { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; margin: 0 0 12px; }
+.hint-text.small { font-size: 0.8rem; margin-top: 12px; }
+.hint-text strong { color: var(--text); }
+
+.steps { margin: 0 0 14px; padding-left: 20px; font-size: 0.9rem; line-height: 1.7; }
+.steps .mono { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+
+.copy-row { display: flex; gap: 8px; align-items: stretch; }
+.copy-text {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
 /* Sehr schmale Ansichten (z. B. Seitenleisten-Vorschau) */
 @media (max-width: 340px) {
   body { padding-left: 8px; padding-right: 8px; }

@@ -11,6 +11,7 @@ Persönlicher Gewohnheitstracker als Progressive Web App (PWA) – läuft auf Ma
 - Tägliches Abhaken mit Fortschrittsring
 - 7-Tage-Leiste: vergangene Tage ansehen und nachtragen
 - Serien (Streaks 🔥) und Statistik (Erfüllungsquote der letzten 30 Tage, Rekord-Serie)
+- Erinnerungen: Benachrichtigung bei geöffneter App plus geführte Einrichtung einer **Kurzbefehle-Automation** (App Kurzbefehle → Automation → Uhrzeit → „Mitteilung anzeigen“) für aktive Mitteilungen auch bei geschlossener App – auf iPhone und Mac
 - Datenexport/-import als JSON (z. B. um Daten vom Mac aufs iPhone zu übertragen)
 - Dark Mode folgt automatisch der Systemeinstellung
 - Offline-fähig dank Service Worker

@@ -79,6 +79,7 @@
 
       <label for="habit-reminder">Erinnerung <small>(optional)</small></label>
       <input id="habit-reminder" type="time">
+      <button type="button" id="shortcut-help-btn" class="hint-btn" hidden>📲 Mitteilung auch bei geschlossener App? Kurzbefehl einrichten …</button>
 
       <label for="habit-notes">Notizen <small>(optional)</small></label>
       <textarea id="habit-notes" rows="2" maxlength="500" placeholder="Warum? Woran denken?"></textarea>
@@ -104,6 +105,33 @@
         <button type="button" id="stats-close-btn" class="btn primary">Schließen</button>
       </div>
       <input type="file" id="import-file" accept="application/json" hidden>
+    </div>
+  </dialog>
+
+  <!-- Dialog: Kurzbefehle-Anleitung -->
+  <dialog id="shortcut-dialog">
+    <div class="stats-content">
+      <h2>Erinnerung als Mitteilung</h2>
+      <p class="hint-text">Mit einer <strong>Kurzbefehle-Automation</strong> erinnert dich dein iPhone (und dein Mac) aktiv per Mitteilung – auch wenn die App geschlossen ist. Einmal einrichten, fertig:</p>
+
+      <ol class="steps">
+        <li>App <strong>Kurzbefehle</strong> öffnen → Tab <strong>Automation</strong> → <strong>+</strong></li>
+        <li><strong>Uhrzeit</strong> wählen → <span id="sc-time" class="mono">20:00</span>, <strong>Täglich</strong> → <strong>Sofort ausführen</strong></li>
+        <li><strong>Neue leere Automation</strong> → <strong>Aktion hinzufügen</strong> → <strong>„Mitteilung anzeigen“</strong> suchen</li>
+        <li>Den folgenden Text einsetzen → <strong>Fertig</strong></li>
+      </ol>
+
+      <div class="copy-row">
+        <code id="sc-text" class="copy-text"></code>
+        <button type="button" id="sc-copy-btn" class="btn ghost">Kopieren</button>
+      </div>
+
+      <p class="hint-text small">Am Mac (ab macOS Tahoe) geht dasselbe in der Kurzbefehle-App unter „Automation“. Tipp: Wenn du die Gewohnheit vorher abhakst, kannst du die Mitteilung einfach wegwischen – die Automation kennt den Haken-Status nicht.</p>
+
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button type="button" id="sc-close-btn" class="btn primary">Schließen</button>
+      </div>
     </div>
   </dialog>
 

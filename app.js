@@ -401,6 +401,7 @@ function openHabitDialog(id = null) {
   }
 
   $("#delete-habit-btn").hidden = !habit;
+  $("#shortcut-help-btn").hidden = !(habit && habit.reminder);
   updatePickers();
   $("#habit-dialog").showModal();
 }
@@ -513,6 +514,33 @@ function importData(file) {
   reader.readAsText(file);
 }
 
+/* ---------- Kurzbefehle-Anleitung ---------- */
+
+function reminderText(name, icon, type) {
+  return type === "quit"
+    ? `${icon} ${name} – bleib stark, heute wieder ohne! Kurz in der Habit-App abhaken.`
+    : `${icon} ${name} – jetzt ist ein guter Moment! Danach in der Habit-App abhaken.`;
+}
+
+function openShortcutDialog() {
+  const time = $("#habit-reminder").value || "20:00";
+  const name = $("#habit-name").value.trim() || "Meine Gewohnheit";
+  $("#sc-time").textContent = time;
+  $("#sc-text").textContent = reminderText(name, dlgEmoji, dlgType);
+  $("#shortcut-dialog").showModal();
+}
+
+async function copyShortcutText() {
+  const btn = $("#sc-copy-btn");
+  try {
+    await navigator.clipboard.writeText($("#sc-text").textContent);
+    btn.textContent = "Kopiert ✓";
+  } catch {
+    btn.textContent = "Bitte manuell kopieren";
+  }
+  setTimeout(() => { btn.textContent = "Kopieren"; }, 2000);
+}
+
 /* ---------- Erinnerungen ---------- */
 
 // Prüft minütlich, ob eine Erinnerung fällig ist. Benachrichtigt nur,
@@ -553,6 +581,13 @@ $("#add-btn").addEventListener("click", () => openHabitDialog());
 $("#habit-form").addEventListener("submit", submitHabit);
 $("#cancel-btn").addEventListener("click", () => $("#habit-dialog").close());
 $("#delete-habit-btn").addEventListener("click", deleteHabit);
+
+$("#habit-reminder").addEventListener("input", (e) => {
+  $("#shortcut-help-btn").hidden = !e.target.value;
+});
+$("#shortcut-help-btn").addEventListener("click", openShortcutDialog);
+$("#sc-copy-btn").addEventListener("click", copyShortcutText);
+$("#sc-close-btn").addEventListener("click", () => $("#shortcut-dialog").close());
 
 $("#stats-btn").addEventListener("click", openStats);
 $("#stats-close-btn").addEventListener("click", () => $("#stats-dialog").close());
