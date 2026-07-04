@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Habit Tracker</title>
+  <meta name="description" content="Persönlicher Gewohnheitstracker">
+  <meta name="theme-color" content="#10b981">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Habits">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1 id="greeting">Hallo!</h1>
+      <p id="today-date" class="subtitle"></p>
+    </div>
+    <button id="stats-btn" class="icon-btn" title="Statistik" aria-label="Statistik">📊</button>
+  </header>
+
+  <section id="progress-card" class="progress-card">
+    <div class="progress-ring-wrap">
+      <svg class="progress-ring" viewBox="0 0 80 80" width="72" height="72">
+        <circle class="ring-bg" cx="40" cy="40" r="34"></circle>
+        <circle id="ring-fill" class="ring-fill" cx="40" cy="40" r="34"></circle>
+      </svg>
+      <span id="progress-pct" class="progress-pct">0%</span>
+    </div>
+    <div class="progress-text">
+      <strong id="progress-title">Heute</strong>
+      <span id="progress-detail">Noch keine Gewohnheiten</span>
+    </div>
+  </section>
+
+  <nav class="day-strip" id="day-strip" aria-label="Letzte 7 Tage"></nav>
+
+  <main>
+    <ul id="habit-list" class="habit-list"></ul>
+    <div id="empty-state" class="empty-state" hidden>
+      <p>🌱</p>
+      <p>Noch keine Gewohnheiten.<br>Tippe auf <strong>+</strong>, um deine erste anzulegen!</p>
+    </div>
+  </main>
+
+  <button id="add-btn" class="fab" aria-label="Neue Gewohnheit">+</button>
+
+  <!-- Dialog: Gewohnheit anlegen / bearbeiten -->
+  <dialog id="habit-dialog">
+    <form id="habit-form" method="dialog">
+      <h2 id="dialog-title">Neue Gewohnheit</h2>
+      <label for="habit-name">Name</label>
+      <input id="habit-name" name="name" type="text" maxlength="40" placeholder="z. B. 10 Min. lesen" required autocomplete="off">
+
+      <label>Symbol</label>
+      <div id="emoji-picker" class="emoji-picker"></div>
+
+      <label>Farbe</label>
+      <div id="color-picker" class="color-picker"></div>
+
+      <label>An welchen Tagen?</label>
+      <div id="weekday-picker" class="weekday-picker"></div>
+
+      <div class="dialog-actions">
+        <button type="button" id="delete-habit-btn" class="btn danger" hidden>Löschen</button>
+        <span class="spacer"></span>
+        <button type="button" id="cancel-btn" class="btn ghost">Abbrechen</button>
+        <button type="submit" class="btn primary">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Dialog: Statistik -->
+  <dialog id="stats-dialog">
+    <div class="stats-content">
+      <h2>Statistik</h2>
+      <div id="stats-body"></div>
+      <div class="dialog-actions">
+        <button type="button" id="export-btn" class="btn ghost">Daten exportieren</button>
+        <button type="button" id="import-btn" class="btn ghost">Importieren</button>
+        <span class="spacer"></span>
+        <button type="button" id="stats-close-btn" class="btn primary">Schließen</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json" hidden>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
