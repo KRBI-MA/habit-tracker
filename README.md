@@ -2,6 +2,9 @@
 
 Persönlicher Gewohnheitstracker als Progressive Web App (PWA) – läuft auf MacBook und iPhone, komplett offline, ohne Konto und ohne Server-Backend. Alle Daten bleiben lokal auf dem Gerät (localStorage).
 
+**Live-Version:** <https://krbi-ma.github.io/habit-tracker/>
+**Repository:** <https://github.com/KRBI-MA/habit-tracker>
+
 ## Funktionen
 
 - Gewohnheiten anlegen mit Name, Emoji, Farbe und Wochentagen (täglich oder z. B. nur Mo/Mi/Fr)
@@ -25,14 +28,9 @@ Tipp: In Safari über **Ablage → Zum Dock hinzufügen** (bzw. in Chrome „App
 
 ## Auf dem iPhone nutzen
 
-Damit die App auf dem iPhone läuft, muss sie über HTTPS erreichbar sein. Die einfachste dauerhafte Lösung ist kostenloses Hosting:
+Die App ist über GitHub Pages gehostet (siehe Live-Version oben):
 
-1. **GitHub Pages** (empfohlen): Ordner als Repository auf GitHub pushen, in den Repo-Einstellungen *Pages* aktivieren → die App ist unter `https://<name>.github.io/...` erreichbar.
-2. Alternativ: Netlify oder Vercel (Ordner per Drag & Drop hochladen).
-
-Dann auf dem iPhone:
-
-1. Die URL in **Safari** öffnen
+1. <https://krbi-ma.github.io/habit-tracker/> in **Safari** öffnen
 2. **Teilen-Button → „Zum Home-Bildschirm"**
 3. Die App erscheint mit eigenem Icon und läuft im Vollbild wie eine native App – auch offline
 
