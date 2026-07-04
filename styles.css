@@ -242,7 +242,10 @@ dialog label {
   margin: 14px 0 6px;
 }
 
-dialog input[type="text"] {
+dialog input[type="text"],
+dialog input[type="number"],
+dialog input[type="time"],
+dialog textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -250,6 +253,40 @@ dialog input[type="text"] {
   background: var(--bg);
   color: var(--text);
   font-size: 1rem;
+  font-family: inherit;
+}
+
+dialog textarea { resize: vertical; }
+
+dialog label small { font-weight: 400; text-transform: none; }
+
+.type-picker { display: flex; gap: 6px; }
+
+.type-option {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.type-option.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.group-header {
+  margin: 8px 4px -2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 .emoji-picker, .color-picker, .weekday-picker {
@@ -343,3 +380,16 @@ dialog input[type="text"] {
 }
 .stats-summary .tile strong { display: block; font-size: 1.3rem; }
 .stats-summary .tile span { font-size: 0.75rem; color: var(--text-dim); }
+
+/* Sehr schmale Ansichten (z. B. Seitenleisten-Vorschau) */
+@media (max-width: 340px) {
+  body { padding-left: 8px; padding-right: 8px; }
+  h1 { font-size: 1.2rem; }
+  .day-strip { gap: 3px; }
+  .day-cell { border-radius: 8px; padding: 6px 0; }
+  .day-cell .dom { font-size: 0.85rem; }
+  .habit-item { padding: 10px; gap: 8px; }
+  .habit-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+  .progress-card { padding: 10px 12px; gap: 10px; }
+  .fab { width: 48px; height: 48px; font-size: 1.6rem; right: 12px; }
+}

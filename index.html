@@ -55,6 +55,12 @@
       <label for="habit-name">Name</label>
       <input id="habit-name" name="name" type="text" maxlength="40" placeholder="z. B. 10 Min. lesen" required autocomplete="off">
 
+      <label>Typ</label>
+      <div id="type-picker" class="type-picker">
+        <button type="button" class="type-option" data-type="build">🌱 Erlernen</button>
+        <button type="button" class="type-option" data-type="quit">🚫 Ablegen</button>
+      </div>
+
       <label>Symbol</label>
       <div id="emoji-picker" class="emoji-picker"></div>
 
@@ -63,6 +69,19 @@
 
       <label>An welchen Tagen?</label>
       <div id="weekday-picker" class="weekday-picker"></div>
+
+      <label for="habit-group">Gruppe <small>(optional)</small></label>
+      <input id="habit-group" type="text" list="group-list" maxlength="30" placeholder="z. B. Gesundheit" autocomplete="off">
+      <datalist id="group-list"></datalist>
+
+      <label for="habit-duration">Dauer: Ziel in Tagen <small>(optional)</small></label>
+      <input id="habit-duration" type="number" min="1" max="365" inputmode="numeric" placeholder="z. B. 30 oder 66">
+
+      <label for="habit-reminder">Erinnerung <small>(optional)</small></label>
+      <input id="habit-reminder" type="time">
+
+      <label for="habit-notes">Notizen <small>(optional)</small></label>
+      <textarea id="habit-notes" rows="2" maxlength="500" placeholder="Warum? Woran denken?"></textarea>
 
       <div class="dialog-actions">
         <button type="button" id="delete-habit-btn" class="btn danger" hidden>Löschen</button>

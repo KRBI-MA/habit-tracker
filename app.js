@@ -18,10 +18,23 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      if (Array.isArray(data.habits) && typeof data.checks === "object") return data;
+      if (Array.isArray(data.habits) && typeof data.checks === "object") return migrate(data);
     }
   } catch (e) { /* beschädigte Daten ignorieren */ }
-  return { habits: [], checks: {} };
+  return { habits: [], checks: {}, notified: {} };
+}
+
+// Ältere Datenstände um neue Felder ergänzen
+function migrate(data) {
+  data.notified = data.notified || {};
+  for (const h of data.habits) {
+    if (!h.type) h.type = "build";        // "build" = erlernen, "quit" = ablegen
+    if (h.group === undefined) h.group = "";
+    if (h.targetDays === undefined) h.targetDays = null;
+    if (h.reminder === undefined) h.reminder = null;
+    if (h.notes === undefined) h.notes = "";
+  }
+  return data;
 }
 
 function save() {
@@ -234,7 +247,34 @@ function renderHabits() {
     return sa - sb || a.createdAt.localeCompare(b.createdAt);
   });
 
-  for (const habit of sorted) {
+  // Nach Gruppen bündeln; Gewohnheiten ohne Gruppe zuerst
+  const groups = new Map();
+  for (const h of sorted) {
+    const g = h.group || "";
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(h);
+  }
+  const groupNames = [...groups.keys()].sort((a, b) => {
+    if (a === "") return -1;
+    if (b === "") return 1;
+    return a.localeCompare(b, "de");
+  });
+
+  const flat = [];
+  for (const g of groupNames) {
+    if (g) flat.push({ header: g });
+    for (const h of groups.get(g)) flat.push({ habit: h });
+  }
+
+  for (const entry of flat) {
+    if (entry.header) {
+      const li = document.createElement("li");
+      li.className = "group-header";
+      li.textContent = entry.header;
+      list.appendChild(li);
+      continue;
+    }
+    const habit = entry.habit;
     const scheduled = isScheduled(habit, date);
     const checked = isChecked(habit.id, selectedDate);
     const streak = currentStreak(habit);
@@ -246,11 +286,24 @@ function renderHabits() {
       ? "Täglich"
       : habit.days.map(i => WEEKDAYS[i]).join(", ");
 
+    const parts = [daysLabel];
+    if (habit.type === "quit") parts.push("🚫 Ablegen");
+    if (streak > 0) {
+      const unit = streak === 1 ? "Tag" : "Tage";
+      parts.push(habit.type === "quit" ? `🔥 ${streak} ${unit} ohne` : `🔥 ${streak} ${unit}`);
+    }
+    if (habit.targetDays) {
+      const done = (state.checks[habit.id] || []).length;
+      parts.push(done >= habit.targetDays ? `🏆 ${habit.targetDays} Tage geschafft!` : `🎯 ${done}/${habit.targetDays}`);
+    }
+    if (habit.reminder) parts.push(`⏰ ${habit.reminder}`);
+    if (habit.notes) parts.push("📝");
+
     li.innerHTML = `
       <div class="habit-icon" style="background:${habit.color}22">${habit.icon}</div>
       <div class="habit-info">
         <div class="name">${escapeHtml(habit.name)}</div>
-        <div class="meta">${daysLabel}${streak > 0 ? ` · 🔥 ${streak} ${streak === 1 ? "Tag" : "Tage"}` : ""}</div>
+        <div class="meta">${escapeHtml(parts.join(" · "))}</div>
       </div>
       <button class="check-btn${checked ? " checked" : ""}" aria-label="Abhaken">✓</button>`;
 
@@ -271,8 +324,11 @@ function escapeHtml(s) {
 let dlgEmoji = EMOJIS[0];
 let dlgColor = COLORS[0];
 let dlgDays = new Set([0, 1, 2, 3, 4, 5, 6]);
+let dlgType = "build";
 
 function buildPickers() {
+  document.querySelectorAll(".type-option").forEach(b =>
+    b.addEventListener("click", () => { dlgType = b.dataset.type; updatePickers(); }));
   const ep = $("#emoji-picker");
   ep.innerHTML = "";
   for (const e of EMOJIS) {
@@ -311,6 +367,8 @@ function buildPickers() {
 }
 
 function updatePickers() {
+  document.querySelectorAll(".type-option").forEach(b =>
+    b.classList.toggle("selected", b.dataset.type === dlgType));
   document.querySelectorAll(".emoji-option").forEach(b =>
     b.classList.toggle("selected", b.textContent === dlgEmoji));
   document.querySelectorAll(".color-option").forEach(b =>
@@ -327,6 +385,21 @@ function openHabitDialog(id = null) {
   dlgEmoji = habit ? habit.icon : EMOJIS[0];
   dlgColor = habit ? habit.color : COLORS[Math.floor(Math.random() * COLORS.length)];
   dlgDays = new Set(habit && habit.days ? habit.days : [0, 1, 2, 3, 4, 5, 6]);
+  dlgType = habit ? habit.type : "build";
+  $("#habit-group").value = habit ? habit.group : "";
+  $("#habit-duration").value = habit && habit.targetDays ? habit.targetDays : "";
+  $("#habit-reminder").value = habit && habit.reminder ? habit.reminder : "";
+  $("#habit-notes").value = habit ? habit.notes : "";
+
+  // Vorhandene Gruppen als Vorschläge anbieten
+  const dl = $("#group-list");
+  dl.innerHTML = "";
+  for (const g of [...new Set(state.habits.map(h => h.group).filter(Boolean))].sort()) {
+    const opt = document.createElement("option");
+    opt.value = g;
+    dl.appendChild(opt);
+  }
+
   $("#delete-habit-btn").hidden = !habit;
   updatePickers();
   $("#habit-dialog").showModal();
@@ -337,23 +410,36 @@ function submitHabit(e) {
   const name = $("#habit-name").value.trim();
   if (!name) return;
   const days = dlgDays.size === 7 ? null : [...dlgDays].sort((a, b) => a - b);
+  const duration = parseInt($("#habit-duration").value, 10);
+  const fields = {
+    name,
+    icon: dlgEmoji,
+    color: dlgColor,
+    days,
+    type: dlgType,
+    group: $("#habit-group").value.trim(),
+    targetDays: duration > 0 ? duration : null,
+    reminder: $("#habit-reminder").value || null,
+    notes: $("#habit-notes").value.trim(),
+  };
 
   if (editingId) {
-    const habit = state.habits.find(h => h.id === editingId);
-    Object.assign(habit, { name, icon: dlgEmoji, color: dlgColor, days });
+    Object.assign(state.habits.find(h => h.id === editingId), fields);
   } else {
     state.habits.push({
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      name,
-      icon: dlgEmoji,
-      color: dlgColor,
-      days,
       createdAt: todayKey(),
+      ...fields,
     });
   }
   save();
   $("#habit-dialog").close();
   render();
+
+  // Für Erinnerungen einmalig um Benachrichtigungs-Erlaubnis bitten
+  if (fields.reminder && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
 }
 
 function deleteHabit() {
@@ -416,7 +502,7 @@ function importData(file) {
       const data = JSON.parse(reader.result);
       if (!Array.isArray(data.habits) || typeof data.checks !== "object") throw new Error();
       if (!confirm("Vorhandene Daten werden ersetzt. Fortfahren?")) return;
-      state = data;
+      state = migrate(data);
       save();
       $("#stats-dialog").close();
       render();
@@ -426,6 +512,38 @@ function importData(file) {
   };
   reader.readAsText(file);
 }
+
+/* ---------- Erinnerungen ---------- */
+
+// Prüft minütlich, ob eine Erinnerung fällig ist. Benachrichtigt nur,
+// solange die App (auch im Hintergrund-Tab) geöffnet ist – eine PWA ohne
+// Push-Server kann keine Benachrichtigungen bei geschlossener App senden.
+function checkReminders() {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const now = new Date();
+  const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const today = todayKey();
+  let changed = false;
+
+  for (const habit of state.habits) {
+    if (!habit.reminder || habit.reminder > hhmm) continue;
+    if (!isScheduled(habit, now)) continue;
+    if (isChecked(habit.id, today)) continue;
+    if (state.notified[habit.id] === today) continue;
+
+    new Notification(`${habit.icon} ${habit.name}`, {
+      body: habit.type === "quit"
+        ? "Heute schon durchgehalten? Jetzt abhaken!"
+        : "Noch nicht erledigt – jetzt ist ein guter Moment!",
+      tag: `habit-${habit.id}`,
+    });
+    state.notified[habit.id] = today;
+    changed = true;
+  }
+  if (changed) save();
+}
+
+setInterval(checkReminders, 60 * 1000);
 
 /* ---------- Initialisierung ---------- */
 
@@ -451,6 +569,7 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) return;
   if (dateKey(parseKey(selectedDate)) < dateKey(daysAgo(6))) selectedDate = todayKey();
   render();
+  checkReminders();
 });
 
 render();
