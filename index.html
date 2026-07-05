@@ -36,7 +36,19 @@
     </div>
   </section>
 
-  <nav class="day-strip" id="day-strip" aria-label="Letzte 7 Tage"></nav>
+  <section class="calendar">
+    <div class="cal-header">
+      <button id="cal-prev" class="cal-nav" aria-label="Zurück">‹</button>
+      <button id="cal-label" title="Zu heute springen"></button>
+      <button id="cal-next" class="cal-nav" aria-label="Weiter">›</button>
+      <div class="view-toggle" role="group" aria-label="Ansicht">
+        <button id="view-week">Woche</button>
+        <button id="view-month">Monat</button>
+      </div>
+    </div>
+    <div id="dow-row" class="dow-row" hidden></div>
+    <nav class="day-strip" id="day-strip" aria-label="Kalender"></nav>
+  </section>
 
   <main>
     <ul id="habit-list" class="habit-list"></ul>

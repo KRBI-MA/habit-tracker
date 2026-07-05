@@ -13,6 +13,11 @@ let state = load();
 let selectedDate = todayKey();
 let editingId = null; // id der Gewohnheit im Dialog, null = neu
 
+// Kalenderansicht: "week" oder "month"; Anker = ein Tag im angezeigten Zeitraum
+const VIEW_KEY = "habit-tracker-view";
+let viewMode = localStorage.getItem(VIEW_KEY) === "month" ? "month" : "week";
+let anchorDate = new Date();
+
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -68,6 +73,19 @@ function weekdayIndex(d) {
 function parseKey(key) {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
+}
+
+function addDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+// Montag der Woche, in der d liegt
+function startOfWeek(d) {
+  const x = addDays(d, -weekdayIndex(d));
+  x.setHours(0, 0, 0, 0);
+  return x;
 }
 
 /* ---------- Logik ---------- */
@@ -158,7 +176,7 @@ const $ = (sel) => document.querySelector(sel);
 function render() {
   renderHeader();
   renderProgress();
-  renderDayStrip();
+  renderCalendar();
   renderHabits();
 }
 
@@ -196,32 +214,84 @@ function renderProgress() {
   ring.style.strokeDashoffset = circumference * (1 - prog.done / prog.total);
 }
 
-function renderDayStrip() {
+function calendarCell(d, className) {
+  const key = dateKey(d);
+  const btn = document.createElement("button");
+  btn.className = className;
+  if (key === selectedDate) btn.classList.add("selected");
+  if (key === todayKey()) btn.classList.add("today");
+  btn.disabled = key > todayKey(); // Zukunft lässt sich nicht abhaken
+
+  const prog = dayProgress(d);
+  let dotClass = "dot";
+  if (prog && prog.done === prog.total) dotClass += " full";
+  else if (prog && prog.done > 0) dotClass += " partial";
+
+  const dow = className === "day-cell" ? `<span class="dow">${WEEKDAYS[weekdayIndex(d)]}</span>` : "";
+  btn.innerHTML = `${dow}<span class="dom">${d.getDate()}</span><span class="${dotClass}"></span>`;
+  btn.addEventListener("click", () => {
+    selectedDate = key;
+    anchorDate = parseKey(key);
+    render();
+  });
+  return btn;
+}
+
+function renderCalendar() {
   const strip = $("#day-strip");
   strip.innerHTML = "";
-  for (let i = 6; i >= 0; i--) {
-    const d = daysAgo(i);
-    const key = dateKey(d);
-    const btn = document.createElement("button");
-    btn.className = "day-cell";
-    if (key === selectedDate) btn.classList.add("selected");
-    if (key === todayKey()) btn.classList.add("today");
+  strip.classList.toggle("month", viewMode === "month");
+  $("#view-week").classList.toggle("active", viewMode === "week");
+  $("#view-month").classList.toggle("active", viewMode === "month");
 
-    const prog = dayProgress(d);
-    let dotClass = "dot";
-    if (prog && prog.done === prog.total) dotClass += " full";
-    else if (prog && prog.done > 0) dotClass += " partial";
-
-    btn.innerHTML = `
-      <span class="dow">${WEEKDAYS[weekdayIndex(d)]}</span>
-      <span class="dom">${d.getDate()}</span>
-      <span class="${dotClass}"></span>`;
-    btn.addEventListener("click", () => {
-      selectedDate = key;
-      render();
-    });
-    strip.appendChild(btn);
+  const dowRow = $("#dow-row");
+  dowRow.hidden = viewMode !== "month";
+  if (!dowRow.childElementCount) {
+    dowRow.innerHTML = WEEKDAYS.map(w => `<span>${w}</span>`).join("");
   }
+
+  if (viewMode === "week") {
+    const start = startOfWeek(anchorDate);
+    const end = addDays(start, 6);
+    const fmt = (d) => d.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
+    $("#cal-label").textContent = `${fmt(start)} – ${fmt(end)}${end.getFullYear() !== new Date().getFullYear() ? ` ${end.getFullYear()}` : ""}`;
+    for (let i = 0; i < 7; i++) {
+      strip.appendChild(calendarCell(addDays(start, i), "day-cell"));
+    }
+  } else {
+    const first = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1);
+    const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    $("#cal-label").textContent = first.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+    for (let i = 0; i < weekdayIndex(first); i++) {
+      const blank = document.createElement("div");
+      blank.className = "month-cell blank";
+      strip.appendChild(blank);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      strip.appendChild(calendarCell(new Date(first.getFullYear(), first.getMonth(), day), "month-cell"));
+    }
+  }
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  localStorage.setItem(VIEW_KEY, mode);
+  render();
+}
+
+function shiftPeriod(dir) {
+  if (viewMode === "week") {
+    anchorDate = addDays(anchorDate, dir * 7);
+  } else {
+    anchorDate = new Date(anchorDate.getFullYear(), anchorDate.getMonth() + dir, 1);
+  }
+  render();
+}
+
+function jumpToToday() {
+  anchorDate = new Date();
+  selectedDate = todayKey();
+  render();
 }
 
 function renderHabits() {
@@ -582,6 +652,12 @@ $("#habit-form").addEventListener("submit", submitHabit);
 $("#cancel-btn").addEventListener("click", () => $("#habit-dialog").close());
 $("#delete-habit-btn").addEventListener("click", deleteHabit);
 
+$("#cal-prev").addEventListener("click", () => shiftPeriod(-1));
+$("#cal-next").addEventListener("click", () => shiftPeriod(1));
+$("#cal-label").addEventListener("click", jumpToToday);
+$("#view-week").addEventListener("click", () => setViewMode("week"));
+$("#view-month").addEventListener("click", () => setViewMode("month"));
+
 $("#habit-reminder").addEventListener("input", (e) => {
   $("#shortcut-help-btn").hidden = !e.target.value;
 });
@@ -598,11 +674,10 @@ $("#import-file").addEventListener("change", (e) => {
   e.target.value = "";
 });
 
-// Beim Zurückkehren zur App (z. B. am nächsten Morgen) neu rendern;
-// liegt der gewählte Tag nicht mehr in der 7-Tage-Leiste, auf heute springen
+// Beim Zurückkehren zur App neu rendern (z. B. Datumswechsel über Nacht);
+// zu heute springen übernimmt der Nutzer über den Zeitraums-Titel
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) return;
-  if (dateKey(parseKey(selectedDate)) < dateKey(daysAgo(6))) selectedDate = todayKey();
   render();
   checkReminders();
 });
